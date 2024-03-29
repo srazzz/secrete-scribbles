@@ -31,6 +31,11 @@ const threadSchema = new mongoose.Schema({
         required: true,
         default: "null"
     },
+    repliedOnPost:{
+        type: String,
+        required: true,
+        default: "null"
+    },
     content: {
         type: String,
         required: true

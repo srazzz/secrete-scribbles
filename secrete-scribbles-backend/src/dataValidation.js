@@ -25,17 +25,16 @@ const verifyOtp = {
 }
 
 const createPost = {
-    body:Joi.object({
-        content:Joi.string().required(),
-        userId:Joi.string().required(),
-    })
+    body: Joi.object({
+        content: Joi.string().required()
+    }),
 }
 
 const createComment = {
     body: Joi.object({
-        content:Joi.string().required(),
-        userId:Joi.string().required(),
-        repliedOnId:Joi.string().required(),
+        content: Joi.string().required(),
+        repliedOnId: Joi.string().required(),
+        repliedOnPost: Joi.string().required(),
     })
 }
 
