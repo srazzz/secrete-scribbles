@@ -37,7 +37,7 @@ const signUp = async (req, res) => {
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             // User already exists
-            return res.status(409).send({ message: "User already exists" });
+            return res.status(409).send({ error: "User already exists" });
         }
         let hashedPassword = bcrypt.hashSync(password, 10);
         // Create new user
@@ -49,12 +49,12 @@ const signUp = async (req, res) => {
         const newUser = new User(newUserData);
         const newUserCreated = await newUser.save();
         if (newUserCreated) {
-            return res.status(201).send({ response: newUserCreated });
+            return res.status(201).send({ response: newUserCreated, message: "User created successfully!!.Please login to continue." });
         } else {
-            return res.status(500).send({ message: "User not created" });
+            return res.status(500).send({ error: "User not created" });
         }
     } catch (error) {
-        return res.status(500).send({ message: `Internal Server Error : ${error}` });
+        return res.status(500).send({ error: `Internal Server Error : ${error}` });
     }
 };
 
@@ -63,14 +63,14 @@ const login = async (req, res) => {
         const { email, password } = req.body
         const user = await User.findOne({ email })
         if (!user) {
-            return res.status(400).json({ message: "User not found" })
+            return res.status(400).json({ error: "User not found" })
         }
         const isCorrectPassword = await bcrypt.compareSync(password, user.password)
         if (isCorrectPassword) {
-            const token = jwt.sign({ user }, process.env.JWT_SECRET, { expiresIn: '1w' })
+            const token = jwt.sign({ user }, process.env.JWT_SECRET, { expiresIn: '10s' })
             return res.status(200).json({ token, message: "Login successful" })
         } else {
-            return res.status(200).json({ message: "Wrong password" })
+            return res.status(200).json({ error: "Wrong password" })
         }
 
     } catch (err) {
@@ -210,7 +210,7 @@ const validateAndSavePassword = async (req, res) => {
         console.log('cache', cacheKey);
         const cachedOtp = otpCache.get(cacheKey);
         console.log('cached otp , otp', cachedOtp, otp);
-        
+
         if (cachedOtp === undefined) {
             return res.status(200).json({ isSuccess: false, message: "otp time out please request for another otp" })
         }
