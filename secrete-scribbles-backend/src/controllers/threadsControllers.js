@@ -45,7 +45,10 @@ const createComment = async (req, res) => {
         if (!existingPost) {
             return res.status(404).json({ error: "Post not found!!" })
         }
-        const existingCommentByUser = await Threads.findOne({ repliedOnPost: repliedOnPost, userId: userId })
+        const existingCommentByUser = await Threads.findOne({$or: [
+            { repliedOnPost: repliedOnPost, userId: userId },
+            { uuid: repliedOnPost, userId: userId, type: "post" }
+        ]})
         // assign same user name for same user in same thread
         let randomUserName
         if (existingCommentByUser) {
@@ -110,15 +113,24 @@ const getThreadById = async (req, res) => {
 
 const getPopularPosts = async (req, res) => {
     try {
-        const popularPosts = await Threads.find({}).sort({ repliesCount: -1 }).limit(5)
+        const popularPosts = await Threads.find({ type: "post" }).sort({ repliesCount: -1 }).limit(5);
+
         if (popularPosts && popularPosts.length) {
-            return res.status(200).json({ success: true, posts: popularPosts })
-        }else{
-            return res.status(200).json({ success: true, message: "unable to retrieve popular posts" })
+            // Loop through each popular post and fetch comments for each post
+            for (let i = 0; i < popularPosts.length; i++) {
+                const postId = popularPosts[i].uuid;
+                const allComments = await getAllComments(postId);
+                popularPosts[i] = { ...popularPosts[i]._doc, comments: allComments };
+            }
+
+            return res.status(200).json({ success: true, posts: popularPosts });
+        } else {
+            return res.status(200).json({ success: false, message: "Unable to retrieve popular posts" });
         }
     } catch (err) {
-        return res.status(500).json({ error: "Internal server error:" + err })
+        return res.status(500).json({ error: "Internal server error:" + err });
     }
 }
+
 
 export default { createThread, createComment, getThreadById, getPopularPosts }
